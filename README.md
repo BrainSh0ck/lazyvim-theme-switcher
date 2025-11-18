@@ -1,15 +1,21 @@
 # lazyvim-theme-switcher
-Theme switcher for lazyvim 
 
-## Installation 
-- Copy the theme-switcher.lua into your plugin folder
-- That's it
+A tiny, zero-dependency plugin for **LazyVim** that lets you instantly switch colorschemes and toggle background transparency.
+
+## Features
+
+- Switch to any installed colorscheme in one command
+- Toggle transparent background on/off
+- Remembers your last colorscheme & transparency setting
+- Beautiful Telescope picker (falls back to vim.ui.select)
+- Works out-of-the-box with LazyVim
+- No external dependencies
+
+## Installation
+
+- Put the lua file in plugins folder for neovim
 
 ## Usage 
 
-- ':Theme'
-- ':Theme catppuccin' Changes Theme color
-- ':Theme catppuccin true/false' Toggles transparency
+:Theme catppuccin "switch to catppuccin
 
-
-That's about it.
