@@ -8,7 +8,8 @@ Theme switcher for lazyvim
 ## Usage 
 
 - ':Theme'
-- ':Theme catppuccin'
+- ':Theme catppuccin' Changes Theme color
+- ':Theme catppuccin true/false' Toggles transparency
 
 
 That's about it.
