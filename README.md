@@ -17,5 +17,11 @@ A tiny, zero-dependency plugin for **LazyVim** that lets you instantly switch co
 
 ## Usage 
 
-:Theme catppuccin "switch to catppuccin
+':Theme catppuccin' **switch to catppuccin**
+':Theme catppuccin true/false' **Toggle transparency**
+
+
+
+
+**That's about it**
 
