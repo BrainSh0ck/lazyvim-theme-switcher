@@ -1,17 +1,19 @@
 -- ~/.config/nvim/lua/plugins/theme-switcher.lua
 return {
-  "nvim-lua/plenary.nvim", -- dummy spec so Lazy accepts the file
+  "BrainSh0ck/lazyvim-theme-switcher",
   name = "theme-switcher",
   lazy = false,
   priority = 1000,
-  dependencies = { "nvim-telescope/telescope.nvim" },
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-telescope/telescope.nvim",
+  },
   config = function()
     local themes_path = vim.fn.stdpath("data") .. "/theme_switcher"
     local current_theme_file = themes_path .. "/current.txt"
     local transparency_file = themes_path .. "/transparent.txt"
     vim.fn.mkdir(themes_path, "p")
 
-    -- Cache for fast completion
     local theme_cache = nil
     local current_transparent = false
 
@@ -23,41 +25,29 @@ return {
       return themes
     end
 
-    -- Invalidate cache when new colorschemes are added/removed
     vim.api.nvim_create_autocmd("ColorSchemePre", {
       callback = function() theme_cache = nil end,
     })
 
-    -- Apply transparency by clearing background highlight groups
     local function set_transparent(transparent)
       current_transparent = transparent
-      if transparent then
-        vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-        vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-        vim.api.nvim_set_hl(0, "SignColumn", { bg = "none" })
-        vim.api.nvim_set_hl(0, "StatusLine", { bg = "none" })
-        vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "none" })
-        vim.api.nvim_set_hl(0, "VertSplit", { bg = "none" })
-        vim.api.nvim_set_hl(0, "WinSeparator", { bg = "none" })
-        vim.api.nvim_set_hl(0, "Pmenu", { bg = "none" })
-        vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
-        vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
-        -- Add more if needed (e.g., for NvimTree, NeoTree, etc.)
-      else
-        -- Let the colorscheme re-apply its default backgrounds
-        vim.cmd([[hi clear Normal]])
-        vim.cmd([[hi clear NormalFloat]])
-        vim.cmd([[hi clear SignColumn]])
-        vim.cmd([[hi clear StatusLine]])
-        vim.cmd([[hi clear StatusLineNC]])
-        vim.cmd([[hi clear WinSeparator]])
-        vim.cmd([[hi clear Pmenu]])
-        vim.cmd([[hi clear TelescopeNormal]])
-        vim.cmd([[hi clear TelescopeBorder]])
-        -- Trigger colorscheme again to restore backgrounds
-        if vim.g.colors_name then
-          vim.cmd.colorscheme(vim.g.colors_name)
+      local bg = transparent and "none" or nil
+      local function hl_clear(group)
+        if bg then
+          vim.api.nvim_set_hl(0, group, { bg = bg })
+        else
+          vim.cmd("hi clear " .. group)
         end
+      end
+      for _, group in ipairs({
+        "Normal", "NormalFloat", "SignColumn",
+        "StatusLine", "StatusLineNC", "VertSplit",
+        "WinSeparator", "Pmenu", "TelescopeNormal", "TelescopeBorder"
+      }) do
+        hl_clear(group)
+      end
+      if not transparent and vim.g.colors_name then
+        vim.cmd.colorscheme(vim.g.colors_name)
       end
     end
 
@@ -92,7 +82,7 @@ return {
     end
 
     local function switch_theme(name, transparent_opt)
-      local ok, err = pcall(vim.cmd.colorscheme, name)
+      local ok, _ = pcall(vim.cmd.colorscheme, name)
       if not ok then
         vim.notify("Theme '" .. name .. "' not found", vim.log.levels.ERROR)
         return false
@@ -121,33 +111,26 @@ return {
         return
       end
 
-      local display_themes = {}
-      for _, t in ipairs(themes) do
-        local marker = (t == vim.g.colors_name and current_transparent) and " (transparent)" or ""
-        table.insert(display_themes, t .. marker)
-      end
+      local pickers = require("telescope.pickers")
+      local finders = require("telescope.finders")
+      local actions = require("telescope.actions")
+      local action_state = require("telescope.actions.state")
+      local conf = require("telescope.config").values
 
-      require("telescope.pickers").new({}, {
+      pickers.new({}, {
         prompt_title = "Select Colorscheme (transparent = ✓)",
-        finder = require("telescope.finders").new_table({
+        finder = finders.new_table({
           results = themes,
           entry_maker = function(entry)
             local display = entry
-            if entry == vim.g.colors_name then
-              display = display .. (current_transparent and "  transparent" or "")
+            if entry == vim.g.colors_name and current_transparent then
+              display = display .. "  transparent"
             end
-            return {
-              value = entry,
-              display = display,
-              ordinal = entry,
-            }
+            return { value = entry, display = display, ordinal = entry }
           end,
         }),
-        sorter = require("telescope.config").values.generic_sorter({}),
+        sorter = conf.generic_sorter({}),
         attach_mappings = function(bufnr, map)
-          local actions = require("telescope.actions")
-          local action_state = require("telescope.actions.state")
-
           local function apply(save_transparent)
             local selection = action_state.get_selected_entry()
             actions.close(bufnr)
@@ -156,11 +139,9 @@ return {
             end
           end
 
-          -- Normal apply (keep current transparency)
           map("i", "<CR>", function() apply(current_transparent) end)
           map("n", "<CR>", function() apply(current_transparent) end)
 
-          -- Toggle transparency on current theme
           map("i", "<C-t>", function()
             local selection = action_state.get_selected_entry()
             if selection then
@@ -168,7 +149,6 @@ return {
             end
           end)
 
-          -- Preview without saving
           map("i", "<C-p>", function()
             local selection = action_state.get_selected_entry()
             if selection then
@@ -182,7 +162,6 @@ return {
       }):find()
     end
 
-    -- Enhanced :Theme command
     vim.api.nvim_create_user_command("Theme", function(opts)
       local args = vim.split(vim.trim(opts.args), "%s+")
       local theme_name = args[1]
@@ -207,8 +186,8 @@ return {
 
       switch_theme(theme_name, transparent)
     end, {
-      nargs = "+",
-      complete = function(arglead, cmdline, cursorpos)
+      nargs = "*",
+      complete = function(arglead)
         local themes = get_all_themes()
         if arglead and arglead ~= "" then
           return vim.tbl_filter(function(theme)
@@ -219,7 +198,6 @@ return {
       end,
     })
 
-    -- Restore last theme + transparency on startup
     vim.schedule(load_saved_state)
   end,
 }
