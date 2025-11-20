@@ -1,4 +1,5 @@
 -- ~/.config/nvim/lua/plugins/theme-switcher.lua
+-- test
 return {
   "BrainSh0ck/lazyvim-theme-switcher",
   name = "theme-switcher",
