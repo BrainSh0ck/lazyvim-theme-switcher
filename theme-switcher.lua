@@ -168,6 +168,18 @@ return {
       local theme_name = args[1]
       local trans_str = args[2]
 
+      -- NEW FEATURE: allow ":Theme true" or ":Theme false" to change transparency only
+      if theme_name == "true" or theme_name == "false" then
+        local new_transparent = (theme_name == "true")
+        local current = vim.g.colors_name
+        if current then
+          switch_theme(current, new_transparent)
+        else
+          vim.notify("No theme is currently active", vim.log.levels.WARN)
+        end
+        return
+      end
+
       if not theme_name or theme_name == "" then
         open_picker()
         return
