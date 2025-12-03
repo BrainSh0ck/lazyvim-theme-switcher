@@ -16,12 +16,12 @@ A tiny, zero-dependency plugin for **LazyVim** that lets you instantly switch co
 - Put the lua file in plugins folder for neovim
 
 ## Usage 
-
-- ':Theme catppuccin' **switch to catppuccin**
-
-- ':Theme catppuccin true/false' **Toggle transparency**
-
-- ':Theme true/false' **Changes transparency mode keeping current theme**
+:Theme                         ** Open picker **
+:Theme gruvbox                 ** Switch theme **
+:Theme gruvbox true            ** Switch with transparency **
+:Theme true                    ** Enable transparency only **
+:Theme false                   ** Disable transparency only **
+:ThemeToggleTransparency       ** Quick toggle**
 
 
 
